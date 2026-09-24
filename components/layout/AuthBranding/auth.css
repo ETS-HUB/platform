@@ -1,0 +1,70 @@
+@keyframes testimonialFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes testimonialFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.testimonial-enter {
+  animation: testimonialFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.testimonial-exit {
+  animation: testimonialFadeOut 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.testimonial-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition:
+    width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.3s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.testimonial-dot.active {
+  width: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes slideInBottom {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes testimonial-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}

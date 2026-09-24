@@ -3,24 +3,50 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-noto-sans: "Noto Sans", sans-serif;
+  --font-lora: "Lora", serif;
+  --font-quicksand: "Quicksand", sans-serif;
+
+  --color-primary: #3a0ca3;
+  --color-primary-hover: #330a8f;
+  --color-primary-active: #2b0879;
+  --color-secondary: #f52593;
+  --color-secondary-hover: #dc1f84;
+  --color-secondary-active: #c21b74;
+  --color-dark-purple: #7408b3;
+  --color-dark-purple-hover: #5e0690;
+  --color-dark-purple-active: #4a0570;
+  --color-light-yellow: #ffe866;
+  --color-surface-soft: #f5eefe;
+  --color-surface-muted: #ede0fb;
+  --color-border: #ddc9f0;
+  --color-border-soft: #ece0f7;
+  --color-outline: rgba(58, 12, 163, 0.25);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-noto: var(--font-noto-sans);
+  --font-lora: var(--font-lora);
+  --font-quicksand: var(--font-quicksand);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-active: var(--color-primary-active);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-hover: var(--color-secondary-hover);
+  --color-secondary-active: var(--color-secondary-active);
+  --color-dark-purple: var(--color-dark-purple);
+  --color-light-yellow: var(--color-light-yellow);
+  --color-surface-soft: var(--color-surface-soft);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-border: var(--color-border);
+  --color-border-soft: var(--color-border-soft);
+  --color-outline: var(--color-outline);
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-quicksand);
 }

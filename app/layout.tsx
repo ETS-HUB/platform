@@ -1,15 +1,32 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { ConfigProvider, App as AntdApp } from "antd";
+import { Noto_Sans_JP, Lora, Quicksand } from "next/font/google";
+import { Toaster } from "react-hot-toast";
+
+import { ReduxProvider } from "@/providers/ReduxProvider";
+import { antdThemeConfig } from "@/antd-theme-config";
+import "../animations/animations.css";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSans = Noto_Sans_JP({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-noto",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const lora = Lora({
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-lora",
+  display: "swap",
+});
+
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-quicksand",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,9 +42,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${notoSans.variable} ${lora.variable} ${quicksand.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ConfigProvider theme={antdThemeConfig}>
+          <AntdApp component={false}>
+            <ReduxProvider>
+              <Toaster position="top-right" />
+              {children}
+            </ReduxProvider>
+          </AntdApp>
+        </ConfigProvider>
+      </body>
     </html>
   );
 }
