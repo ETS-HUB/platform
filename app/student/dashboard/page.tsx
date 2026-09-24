@@ -27,6 +27,7 @@ import {
   useGetUserMeQuery,
 } from "@/apis/dashboard/dashboardService";
 import { LeaderboardWidget } from "../leaderboard/components/LeaderboardWidget";
+import type { MyRankResponse } from "@/apis/profile/types";
 
 export default function DashboardHome() {
   const router = useRouter();
