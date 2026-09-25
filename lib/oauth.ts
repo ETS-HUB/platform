@@ -3,7 +3,7 @@
  */
 
 export function getBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  return process.env.BACKEND_API_URL || "http://localhost:3000";
 }
 
 export function getBackendUrl(): string {
