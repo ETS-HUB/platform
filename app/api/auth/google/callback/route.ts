@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getBaseUrl,
   getBackendUrl,
   buildFrontendCallbackUrl,
   buildFrontendErrorUrl,
@@ -25,19 +24,23 @@ interface GoogleUserInfo {
 }
 
 export async function GET(request: NextRequest) {
+  const origin = request.nextUrl.origin;
   const code = request.nextUrl.searchParams.get("code");
   const stateParam = request.nextUrl.searchParams.get("state");
   const error = request.nextUrl.searchParams.get("error");
 
   if (error) {
     return NextResponse.redirect(
-      buildFrontendErrorUrl("Google authentication was cancelled"),
+      buildFrontendErrorUrl("Google authentication was cancelled", origin),
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      buildFrontendErrorUrl("No authorization code received from Google"),
+      buildFrontendErrorUrl(
+        "No authorization code received from Google",
+        origin,
+      ),
     );
   }
 
@@ -51,7 +54,10 @@ export async function GET(request: NextRequest) {
 
   const clientId = process.env.GOOGLE_CLIENT_ID!;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
-  const redirectUri = `${getBaseUrl()}/api/auth/google/callback`;
+
+  // Must exactly match the redirect_uri sent in the initial auth request
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || origin;
+  const redirectUri = `${appUrl}/api/auth/google/callback`;
 
   try {
     // Exchange code for tokens
@@ -71,7 +77,7 @@ export async function GET(request: NextRequest) {
       const err = await tokenRes.text();
       console.error("Google token exchange failed:", err);
       return NextResponse.redirect(
-        buildFrontendErrorUrl("Failed to authenticate with Google"),
+        buildFrontendErrorUrl("Failed to authenticate with Google", origin),
       );
     }
 
@@ -80,14 +86,12 @@ export async function GET(request: NextRequest) {
     // Fetch user info
     const userInfoRes = await fetch(
       "https://www.googleapis.com/oauth2/v3/userinfo",
-      {
-        headers: { Authorization: `Bearer ${tokens.access_token}` },
-      },
+      { headers: { Authorization: `Bearer ${tokens.access_token}` } },
     );
 
     if (!userInfoRes.ok) {
       return NextResponse.redirect(
-        buildFrontendErrorUrl("Failed to fetch Google profile"),
+        buildFrontendErrorUrl("Failed to fetch Google profile", origin),
       );
     }
 
@@ -114,7 +118,7 @@ export async function GET(request: NextRequest) {
       const errData = await backendRes.json().catch(() => null);
       const message =
         errData?.message || "Failed to complete Google authentication";
-      return NextResponse.redirect(buildFrontendErrorUrl(message));
+      return NextResponse.redirect(buildFrontendErrorUrl(message, origin));
     }
 
     const authData = await backendRes.json();
@@ -125,12 +129,16 @@ export async function GET(request: NextRequest) {
         refreshToken: authData.refreshToken,
         user: authData.user,
         redirect,
+        requestOrigin: origin,
       }),
     );
   } catch (err) {
     console.error("Google OAuth error:", err);
     return NextResponse.redirect(
-      buildFrontendErrorUrl("An unexpected error occurred during Google login"),
+      buildFrontendErrorUrl(
+        "An unexpected error occurred during Google login",
+        origin,
+      ),
     );
   }
 }

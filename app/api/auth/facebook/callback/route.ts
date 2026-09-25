@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getBaseUrl,
   getBackendUrl,
   buildFrontendCallbackUrl,
   buildFrontendErrorUrl,
@@ -25,19 +24,23 @@ interface FacebookUserInfo {
 }
 
 export async function GET(request: NextRequest) {
+  const origin = request.nextUrl.origin;
   const code = request.nextUrl.searchParams.get("code");
   const stateParam = request.nextUrl.searchParams.get("state");
   const error = request.nextUrl.searchParams.get("error");
 
   if (error) {
     return NextResponse.redirect(
-      buildFrontendErrorUrl("Facebook authentication was cancelled"),
+      buildFrontendErrorUrl("Facebook authentication was cancelled", origin),
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      buildFrontendErrorUrl("No authorization code received from Facebook"),
+      buildFrontendErrorUrl(
+        "No authorization code received from Facebook",
+        origin,
+      ),
     );
   }
 
@@ -51,7 +54,10 @@ export async function GET(request: NextRequest) {
 
   const appId = process.env.FACEBOOK_APP_ID!;
   const appSecret = process.env.FACEBOOK_APP_SECRET!;
-  const redirectUri = `${getBaseUrl()}/api/auth/facebook/callback`;
+
+  // Must exactly match the redirect_uri sent in the initial auth request
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || origin;
+  const redirectUri = `${appUrl}/api/auth/facebook/callback`;
 
   try {
     // Exchange code for access token
@@ -70,7 +76,7 @@ export async function GET(request: NextRequest) {
       const err = await tokenRes.text();
       console.error("Facebook token exchange failed:", err);
       return NextResponse.redirect(
-        buildFrontendErrorUrl("Failed to authenticate with Facebook"),
+        buildFrontendErrorUrl("Failed to authenticate with Facebook", origin),
       );
     }
 
@@ -88,7 +94,7 @@ export async function GET(request: NextRequest) {
 
     if (!userInfoRes.ok) {
       return NextResponse.redirect(
-        buildFrontendErrorUrl("Failed to fetch Facebook profile"),
+        buildFrontendErrorUrl("Failed to fetch Facebook profile", origin),
       );
     }
 
@@ -98,6 +104,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(
         buildFrontendErrorUrl(
           "Email permission is required. Please try again and grant email access.",
+          origin,
         ),
       );
     }
@@ -122,7 +129,7 @@ export async function GET(request: NextRequest) {
       const errData = await backendRes.json().catch(() => null);
       const message =
         errData?.message || "Failed to complete Facebook authentication";
-      return NextResponse.redirect(buildFrontendErrorUrl(message));
+      return NextResponse.redirect(buildFrontendErrorUrl(message, origin));
     }
 
     const authData = await backendRes.json();
@@ -133,6 +140,7 @@ export async function GET(request: NextRequest) {
         refreshToken: authData.refreshToken,
         user: authData.user,
         redirect,
+        requestOrigin: origin,
       }),
     );
   } catch (err) {
@@ -140,6 +148,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       buildFrontendErrorUrl(
         "An unexpected error occurred during Facebook login",
+        origin,
       ),
     );
   }

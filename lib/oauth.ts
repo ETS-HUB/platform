@@ -25,8 +25,13 @@ export function buildFrontendCallbackUrl(params: {
   refreshToken: string;
   user: object;
   redirect?: string | null;
+  requestOrigin?: string;
 }): string {
-  const url = new URL("/auth/callback", getBaseUrl());
+  const base =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    params.requestOrigin ||
+    "http://localhost:3001";
+  const url = new URL("/auth/callback", base);
   url.searchParams.set("accessToken", params.accessToken);
   url.searchParams.set("refreshToken", params.refreshToken);
   url.searchParams.set("user", encodeURIComponent(JSON.stringify(params.user)));
@@ -36,8 +41,15 @@ export function buildFrontendCallbackUrl(params: {
   return url.toString();
 }
 
-export function buildFrontendErrorUrl(error: string): string {
-  const url = new URL("/auth/callback", getBaseUrl());
+export function buildFrontendErrorUrl(
+  error: string,
+  requestOrigin?: string,
+): string {
+  const base =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    requestOrigin ||
+    "http://localhost:3001";
+  const url = new URL("/auth/callback", base);
   url.searchParams.set("error", error);
   return url.toString();
 }
