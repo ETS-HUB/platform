@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBaseUrl } from "@/lib/oauth";
 
 export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -12,15 +11,17 @@ export async function GET(request: NextRequest) {
   }
 
   const redirect = request.nextUrl.searchParams.get("redirect");
-  const callbackUrl = new URL("/api/auth/google/callback", getBaseUrl());
 
-  if (redirect) {
-    callbackUrl.searchParams.set("redirect", redirect);
-  }
+  // NEXT_PUBLIC_APP_URL must match the URI registered in Google Cloud Console.
+  // Falls back to the request origin for local dev (no env var needed locally).
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    request.nextUrl.origin;
+  const callbackUri = `${appUrl}/api/auth/google/callback`;
 
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: callbackUrl.origin + callbackUrl.pathname,
+    redirect_uri: callbackUri,
     response_type: "code",
     scope: "openid email profile",
     access_type: "offline",

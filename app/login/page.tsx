@@ -287,7 +287,7 @@ export default function LoginPage() {
               Google
             </button>
 
-            <button
+            {/* <button
               type="button"
               onClick={() => handleSocialLogin("facebook")}
               className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-sm font-medium text-gray-700"
@@ -305,7 +305,7 @@ export default function LoginPage() {
                 />
               </svg>
               Facebook
-            </button>
+            </button> */}
           </div>
 
           <div className="bg-gray-50 rounded-xl py-4 text-center">

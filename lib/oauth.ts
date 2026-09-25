@@ -2,12 +2,19 @@
  * Shared OAuth utilities for Google and Facebook authentication.
  */
 
+/**
+ * The frontend app's base URL — used to build OAuth redirect URIs and
+ * callback URLs that land back on the Next.js server.
+ */
 export function getBaseUrl(): string {
-  return process.env.BACKEND_API_URL || "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
 }
 
+/**
+ * The backend API base URL — used when calling the backend directly.
+ */
 export function getBackendUrl(): string {
-  return process.env.BACKEND_API_URL || "http://localhost:4000";
+  return process.env.BACKEND_API_URL || "http://localhost:3000";
 }
 
 /**
