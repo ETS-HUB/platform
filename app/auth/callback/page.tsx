@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 
-import { setCredentials } from "@/store/slices/auth/authSlice";
+import { setCredentials, setUser } from "@/store/slices/auth/authSlice";
 import { setTokens } from "@/store/slices/auth/tokenSlice";
 import { setAuthTokenCookie } from "@/lib/authCookies";
 import type { AppDispatch } from "@/store";
@@ -17,6 +17,24 @@ const roleRedirectMap: Record<string, string> = {
   ADMIN: "/core/admin/overview",
   SUPER_ADMIN: "/core/admin/overview",
 };
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+/**
+ * Fetch full user data from /api/users/me and return it.
+ * Falls back to the minimal user object if the fetch fails.
+ */
+async function fetchFullUser(token: string, fallback: Record<string, unknown>) {
+  try {
+    const res = await fetch(`${API_URL}/api/users/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) return await res.json();
+  } catch {
+    // silently fall through
+  }
+  return fallback;
+}
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -43,41 +61,48 @@ export default function AuthCallbackPage() {
     const nextStep = searchParams.get("nextStep");
 
     if (token) {
-      try {
-        // Decode the JWT payload to extract user info (no verification needed —
-        // backend already validated it)
-        const parts = token.split(".");
-        const payload = JSON.parse(
-          atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
-        );
+      (async () => {
+        try {
+          // Decode JWT for minimal user info (role needed for redirect decision)
+          const parts = token.split(".");
+          const payload = JSON.parse(
+            atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+          );
 
-        const user = {
-          id: payload.sub || payload.id,
-          email: payload.email,
-          firstName: payload.firstName,
-          lastName: payload.lastName,
-          role: payload.role,
-          avatar: payload.avatar || null,
-        };
+          const minimalUser = {
+            id: payload.sub || payload.id,
+            email: payload.email,
+            firstName: payload.firstName,
+            lastName: payload.lastName,
+            role: payload.role,
+            avatar: payload.avatar || null,
+          };
 
-        dispatch(setCredentials({ user }));
-        dispatch(setTokens({ accessToken: token, refreshToken: "" }));
-        setAuthTokenCookie(token);
+          // Set tokens first so RTK Query requests can authenticate
+          dispatch(setCredentials({ user: minimalUser }));
+          dispatch(setTokens({ accessToken: token, refreshToken: "" }));
+          setAuthTokenCookie(token);
 
-        toast.success("Login successful!");
+          // Fetch full user data (firstName, lastName, avatar, profile, etc.)
+          const fullUser = await fetchFullUser(token, minimalUser);
+          dispatch(setUser(fullUser));
 
-        // nextStep=onboarding → assessment flow; otherwise role-based redirect
-        if (nextStep === "onboarding" && user.role === "STUDENT") {
-          router.replace("/app/assesment");
-          return;
+          toast.success("Login successful!");
+
+          const roleKey = (fullUser.role || minimalUser.role)?.toUpperCase();
+
+          // nextStep=onboarding → assessment/onboarding flow
+          if (nextStep === "onboarding" && roleKey === "STUDENT") {
+            router.replace("/app/assesment");
+            return;
+          }
+
+          router.replace(roleRedirectMap[roleKey] || "/");
+        } catch {
+          toast.error("Failed to process login. Please try again.");
+          router.replace("/login");
         }
-
-        const roleKey = user.role?.toUpperCase();
-        router.replace(roleRedirectMap[roleKey] || "/");
-      } catch {
-        toast.error("Failed to process login. Please try again.");
-        router.replace("/login");
-      }
+      })();
       return;
     }
 
@@ -93,27 +118,34 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    try {
-      const user = JSON.parse(decodeURIComponent(userParam));
+    (async () => {
+      try {
+        const parsedUser = JSON.parse(decodeURIComponent(userParam));
 
-      dispatch(setCredentials({ user }));
-      dispatch(setTokens({ accessToken, refreshToken }));
-      setAuthTokenCookie(accessToken);
+        dispatch(setCredentials({ user: parsedUser }));
+        dispatch(setTokens({ accessToken, refreshToken }));
+        setAuthTokenCookie(accessToken);
 
-      toast.success("Login successful!");
+        // Enrich with full user data
+        const fullUser = await fetchFullUser(accessToken, parsedUser);
+        dispatch(setUser(fullUser));
 
-      if (nextStep === "onboarding" && user.role === "STUDENT") {
-        router.replace("/app/assesment");
-        return;
+        toast.success("Login successful!");
+
+        const roleKey = (fullUser.role || parsedUser.role)?.toUpperCase();
+
+        if (nextStep === "onboarding" && roleKey === "STUDENT") {
+          router.replace("/app/assesment");
+          return;
+        }
+
+        const roleRedirect = roleKey ? roleRedirectMap[roleKey] : null;
+        router.replace(redirect || roleRedirect || "/");
+      } catch {
+        toast.error("Failed to process login. Please try again.");
+        router.replace("/login");
       }
-
-      const roleKey = user.role?.toUpperCase();
-      const roleRedirect = roleKey ? roleRedirectMap[roleKey] : null;
-      router.replace(redirect || roleRedirect || "/");
-    } catch {
-      toast.error("Failed to process login. Please try again.");
-      router.replace("/login");
-    }
+    })();
   }, [searchParams, dispatch, router]);
 
   return (

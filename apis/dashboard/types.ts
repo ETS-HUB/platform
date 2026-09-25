@@ -106,6 +106,18 @@ export interface DashboardResponse {
 }
 
 export interface UserMeResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  avatar: string | null;
+  role: string;
+  profile: {
+    goal?: string;
+    trackSlug?: string | null;
+    xp: number;
+    level: number;
+  } | null;
   assessmentAttempts: unknown[];
   [key: string]: unknown;
 }

@@ -2,10 +2,40 @@
 
 import { useState } from "react";
 import { Upload, Loader2 } from "lucide-react";
-import { Input, Select, message } from "antd";
-import type { UserProfile } from "@/apis/profile/types";
+import { Input, Select } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import type { AppDispatch, RootState } from "@/store";
+import { setUser } from "@/store/slices/auth/authSlice";
+import { changePasswordUser } from "@/store/slices/auth/authThunks";
+import { useUpdateProfileMutation } from "@/apis/profile/profileService";
+import { uploadFile } from "@/apis/upload/uploadService";
+import { api } from "@/apis/api";
+import Image from "next/image";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { UserIcon } from "@hugeicons/core-free-icons";
 
-export function SettingsTab({ user }: { user: UserProfile }) {
+interface UserForSettings {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatar: string | null;
+  profile: {
+    goal?: string;
+    trackSlug?: string | null;
+    experienceLevel?: string;
+    learningStyle?: string;
+    weeklyHours?: number;
+    xp: number;
+    level: number;
+  };
+}
+
+export function SettingsTab({ user }: { user: UserForSettings }) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { accessToken } = useSelector((s: RootState) => s.tokens);
+
   const [firstName, setFirstName] = useState(user.firstName);
   const [lastName, setLastName] = useState(user.lastName);
   const [goal, setGoal] = useState(user.profile.goal ?? "");
@@ -24,6 +54,8 @@ export function SettingsTab({ user }: { user: UserProfile }) {
   );
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  const [updateProfile] = useUpdateProfileMutation();
+
   const passwordsMatch =
     newPassword.length === 0 || newPassword === confirmPassword;
   const canChangePassword =
@@ -33,15 +65,24 @@ export function SettingsTab({ user }: { user: UserProfile }) {
 
   const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarPreview(URL.createObjectURL(file)); // instant local preview
+    if (!file || !accessToken) return;
+    setAvatarPreview(URL.createObjectURL(file));
     setUploadingAvatar(true);
     try {
-      // Stub — replace with POST /api/upload?folder=avatars then PATCH /api/users/profile
-      await new Promise((r) => setTimeout(r, 800));
-      message.success("Avatar updated");
+      const { url } = await uploadFile(file, accessToken, "avatars");
+      await updateProfile({
+        firstName,
+        lastName,
+        goal: goal || undefined,
+        trackSlug,
+      });
+      // Invalidate the me query so sidebar/header refreshes
+      dispatch(api.util.invalidateTags(["Users"]));
+      // Update local Redux user state immediately
+      dispatch(setUser({ ...user, avatar: url } as any));
+      toast.success("Avatar updated");
     } catch {
-      message.error("Avatar upload failed");
+      toast.error("Avatar upload failed");
       setAvatarPreview(user.avatar);
     } finally {
       setUploadingAvatar(false);
@@ -51,11 +92,16 @@ export function SettingsTab({ user }: { user: UserProfile }) {
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      // Stub — replace with PATCH /api/users/profile
-      await new Promise((r) => setTimeout(r, 500));
-      message.success("Profile updated");
+      await updateProfile({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        goal: goal.trim() || undefined,
+        trackSlug: trackSlug ?? null,
+      }).unwrap();
+      dispatch(api.util.invalidateTags(["Users"]));
+      toast.success("Profile updated");
     } catch {
-      message.error("Failed to update profile");
+      toast.error("Failed to update profile");
     } finally {
       setSavingProfile(false);
     }
@@ -65,14 +111,15 @@ export function SettingsTab({ user }: { user: UserProfile }) {
     if (!canChangePassword) return;
     setChangingPassword(true);
     try {
-      // Stub — replace with POST /api/auth/change-password
-      await new Promise((r) => setTimeout(r, 500));
-      message.success("Password changed");
+      await dispatch(
+        changePasswordUser({ currentPassword, newPassword }),
+      ).unwrap();
+      toast.success("Password changed");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch {
-      message.error("Failed to change password — check your current password");
+      toast.error("Failed to change password — check your current password");
     } finally {
       setChangingPassword(false);
     }
@@ -83,14 +130,21 @@ export function SettingsTab({ user }: { user: UserProfile }) {
       {/* avatar */}
       <div className="flex items-center gap-4">
         <div className="relative">
-          <img
-            src={
-              avatarPreview ||
-              `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName}`
-            }
-            alt=""
-            className="w-16 h-16 rounded-full object-cover"
-          />
+          {user?.avatar ? (
+            <Image
+              src={user.avatar}
+              alt={"User"}
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <HugeiconsIcon
+              icon={UserIcon}
+              size={32}
+              className="text-gray-400"
+            />
+          )}
           {uploadingAvatar && (
             <div
               className="absolute inset-0 flex items-center justify-center rounded-full"
@@ -163,6 +217,7 @@ export function SettingsTab({ user }: { user: UserProfile }) {
               value={trackSlug}
               onChange={setTrackSlug}
               style={{ width: "100%" }}
+              allowClear
               placeholder="Select a track"
               options={[
                 { label: "Frontend", value: "frontend" },

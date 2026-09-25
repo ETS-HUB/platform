@@ -20,10 +20,7 @@ import {
   isAllowedFileType,
 } from "@/apis/upload/uploadService";
 import { useSubmitAssignmentMutation } from "@/apis/assignments/assignmentService";
-import type {
-  UploadedFile,
-  MySubmission,
-} from "@/apis/assignments/assignmentService";
+import type { SubmittedFile, MySubmission } from "@/apis/assignments/types";
 import { TextBlock } from "../blocks/TextBlock"; // reuse the real markdown renderer
 
 interface ProjectBlockProps {
@@ -59,7 +56,7 @@ export function ProjectBlock({
   const [link, setLink] = useState("");
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFiles, setSubmittedFiles] = useState<SubmittedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [linkTouched, setLinkTouched] = useState(false);
@@ -101,8 +98,8 @@ export function ProjectBlock({
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const removeUploadedFile = (index: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeSubmittedFile = (index: number) => {
+    setSubmittedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -119,15 +116,15 @@ export function ProjectBlock({
       setUploading(true);
       try {
         const uploaded = await uploadMultipleFiles(files, accessToken);
-        // Map UploadResponse → UploadedFile shape expected by the submission payload
-        const mappedFiles: UploadedFile[] = uploaded.map((r, i) => ({
+        // Map UploadResponse → SubmittedFile shape expected by the submission payload
+        const mappedFiles: SubmittedFile[] = uploaded.map((r, i) => ({
           url: r.url,
           fileName: files[i]?.name ?? r.url.split("/").pop() ?? "file",
           fileType: files[i]?.type ?? "application/octet-stream",
           fileSize: files[i]?.size ?? 0,
         }));
         finalFiles = [...uploadedFiles, ...mappedFiles];
-        setUploadedFiles(finalFiles);
+        setSubmittedFiles(finalFiles);
         setFiles([]);
       } catch {
         message.error("File upload failed. Please try again.");
@@ -330,7 +327,7 @@ export function ProjectBlock({
                       <CheckCircle2 size={12} style={{ color: "#059669" }} />
                       {f.fileName}
                     </span>
-                    <button type="button" onClick={() => removeUploadedFile(i)}>
+                    <button type="button" onClick={() => removeSubmittedFile(i)}>
                       <X
                         size={13}
                         className="text-gray-400 hover:text-red-500"

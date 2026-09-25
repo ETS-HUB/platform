@@ -45,6 +45,8 @@ export function BadgeGrid({
                     alt={badge.name}
                     className="w-8 h-8 object-contain"
                   />
+                ) : badge.icon ? (
+                  <span className="text-[32px] leading-none">{badge.icon}</span>
                 ) : (
                   <span className="text-[32px] leading-none">🏅</span>
                 )}

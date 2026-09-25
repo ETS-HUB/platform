@@ -72,7 +72,6 @@ function CourseCardSkeleton() {
         </div>
       </div>
 
-      {/* motif placeholder */}
       <Skeleton.Avatar
         active
         shape="circle"

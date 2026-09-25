@@ -1,78 +1,40 @@
 "use client";
 
-import { useMemo } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { ClipboardList } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Select, Skeleton } from "antd";
+import { useSelector } from "react-redux";
 import { AssignmentCard } from "./components/AssignmentCard";
-import type { AssignmentListItem } from "@/apis/assignments/types";
+import { useGetCourseAssignmentsQuery } from "@/apis/assignments/assignmentService";
+import { useGetDashboardQuery } from "@/apis/dashboard/dashboardService";
 import Header from "@/components/ui/Header";
 import { IMAGES } from "@/constants/images";
 import Image from "next/image";
-
-// Replace with useGetCourseAssignmentsQuery(topicId) — shape matches exactly
-const MOCK_ASSIGNMENTS: AssignmentListItem[] = [
-  {
-    id: "ass-1-uuid",
-    title: "Exercise: Array Method Challenges",
-    description:
-      "## Array Challenges\n\nSolve the following using array methods...",
-    type: "EXERCISE",
-    dueDate: "2026-07-24T00:00:00.000Z",
-    points: 50,
-    requiresLink: false,
-    requiresFile: true,
-    requiresText: true,
-    createdBy: { firstName: "Sarah", lastName: "Mitchell", avatar: null },
-    totalSubmissions: 0,
-    mySubmission: null,
-    createdAt: "2026-07-17T00:00:00.000Z",
-  },
-  {
-    id: "ass-2-uuid",
-    title: "Final Project: Build a Quiz App",
-    type: "PROJECT",
-    points: 100,
-    requiresLink: true,
-    requiresFile: false,
-    requiresText: true,
-    createdBy: { firstName: "Sarah", lastName: "Mitchell", avatar: null },
-    totalSubmissions: 1,
-    mySubmission: {
-      id: "sub-uuid",
-      status: "SUBMITTED",
-      link: "https://github.com/alex-johnson/js-quiz-app",
-      files: [
-        {
-          url: "#",
-          fileName: "quiz-screenshot.png",
-          fileType: "image/png",
-          fileSize: 340000,
-        },
-      ],
-      text: "Built with vanilla JS. Live demo: https://alex-quiz.vercel.app",
-      score: null,
-      feedback: null,
-      submittedAt: "2026-07-17T00:00:00.000Z",
-    },
-    createdAt: "2026-07-10T00:00:00.000Z",
-  },
-];
+import type { RootState } from "@/store";
 
 export default function AssignmentsListPage() {
   const router = useRouter();
-  const params = useParams();
-  const topicId = params.topicId as string;
+  const { accessToken } = useSelector((s: RootState) => s.tokens);
+  const [topicId, setTopicId] = useState<string>("");
 
-  const assignments = MOCK_ASSIGNMENTS;
+  // Enrolled courses for the picker
+  const { data: dashData, isLoading: dashLoading } = useGetDashboardQuery(
+    undefined,
+    { skip: !accessToken },
+  );
+  const enrolledCourses = dashData?.enrolledCourses ?? [];
 
-  // Not-yet-submitted first, sorted by urgency; already-handled ones after —
-  // action-needed items shouldn't be buried below settled ones.
+  const { data: assignments = [], isLoading: assignmentsLoading } =
+    useGetCourseAssignmentsQuery(topicId, { skip: !topicId });
+
+  const isLoading = assignmentsLoading;
+
+  // Action-needed items first, sorted by due date urgency
   const sorted = useMemo(() => {
     return [...assignments].sort((a, b) => {
       const aDone = a.mySubmission?.status === "APPROVED";
       const bDone = b.mySubmission?.status === "APPROVED";
       if (aDone !== bDone) return aDone ? 1 : -1;
-
       const aDue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
       const bDue = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
       return aDue - bDue;
@@ -80,29 +42,82 @@ export default function AssignmentsListPage() {
   }, [assignments]);
 
   const pendingCount = assignments.filter(
-    (a) => !a.mySubmission || a.mySubmission.status === "REJECTED",
+    (a) =>
+      !a.mySubmission ||
+      a.mySubmission.status === "REJECTED" ||
+      a.mySubmission.status === "RESUBMIT",
   ).length;
 
   return (
     <div className="min-h-screen w-full">
-      <div className="mb-8">
+      <div className="mb-6">
         <Header
           title="Assignments"
           subtitle={
-            pendingCount > 0
-              ? `${pendingCount} assignment${pendingCount > 1 ? "s" : ""} need your attention.`
-              : "You're all caught up."
+            !topicId
+              ? "Select a course to view its assignments."
+              : isLoading
+                ? "Loading..."
+                : pendingCount > 0
+                  ? `${pendingCount} assignment${pendingCount > 1 ? "s" : ""} need your attention.`
+                  : "You're all caught up."
           }
         />
       </div>
 
-      {sorted.length === 0 ? (
+      {/* Course picker */}
+      <div className="mb-6">
+        <Select
+          showSearch
+          allowClear
+          placeholder="Select a course"
+          style={{ width: "100%", maxWidth: 360 }}
+          size="large"
+          loading={dashLoading}
+          value={topicId || undefined}
+          onChange={(v) => setTopicId(v ?? "")}
+          filterOption={(input, opt) =>
+            ((opt?.label as string) ?? "")
+              .toLowerCase()
+              .includes(input.toLowerCase())
+          }
+          options={enrolledCourses.map((c) => ({
+            label: c.courseName,
+            value: c.courseId,
+          }))}
+        />
+      </div>
+
+      {!topicId ? (
         <div className="flex flex-col items-center gap-5 justify-center py-20 text-center">
           <Image
             src={IMAGES.EmptyImageTwo}
-            width={300}
-            height={300}
-            alt="No practice topics available"
+            width={240}
+            height={240}
+            alt="Select a course"
+          />
+          <p className="text-base sm:text-lg text-[#9CA3AF]">
+            Pick a course above to see its assignments.
+          </p>
+        </div>
+      ) : isLoading ? (
+        <div className="flex flex-col gap-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl p-5 bg-white border border-[#EDE0FB]"
+            >
+              <Skeleton active paragraph={{ rows: 2 }} />
+            </div>
+          ))}
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="flex flex-col items-center gap-5 justify-center py-20 text-center">
+          <Image
+            src={IMAGES.EmptyImageTwo}
+            width={240}
+            height={240}
+            alt="No assignments"
           />
           <p className="text-base sm:text-lg text-[#9CA3AF]">
             No assignments in this course yet.

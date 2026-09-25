@@ -4,6 +4,23 @@ export interface User {
   firstName: string;
   lastName: string;
   role: string;
+  avatar?: string | null;
+  isActive?: boolean;
+  googleId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  profile?: {
+    id: string;
+    goal: string;
+    trackSlug: string | null;
+    experienceLevel: string;
+    learningStyle: string;
+    weeklyHours: number;
+    xp: number;
+    level: number;
+    isVisibleToRecruiters: boolean;
+  } | null;
+  assessmentAttempts?: unknown[];
 }
 
 export interface OnboardingInfo {
@@ -43,6 +60,7 @@ export interface RegisterRequest {
 
 export interface CreateProfileRequest {
   goal: string;
+  trackSlug?: string;
   experienceLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
   learningStyle: "VISUAL" | "AUDITORY" | "READING" | "KINESTHETIC";
   weeklyHours: number;

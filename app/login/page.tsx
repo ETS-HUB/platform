@@ -26,6 +26,8 @@ const redirectMap: Record<string, string> = {
   TUTOR: "/tutor/dashboard",
   PARENT: "/parent/dashboard",
   STUDENT: "/student/dashboard",
+  ADMIN: "/core/admin/overview",
+  SUPER_ADMIN: "/core/admin/overview",
 };
 
 function getRedirectUrlFromRole(role?: string): string | null {
@@ -47,6 +49,10 @@ function getSafeRedirectPath(
   }
 
   if (roleKey === "STUDENT" && redirectPath.startsWith("/student")) {
+    return redirectPath;
+  }
+
+  if (roleKey === "ADMIN" && redirectPath.startsWith("/core")) {
     return redirectPath;
   }
 

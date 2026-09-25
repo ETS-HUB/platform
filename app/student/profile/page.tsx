@@ -2,154 +2,124 @@
 
 import { useState } from "react";
 import { LayoutGrid, Settings, BarChart3 } from "lucide-react";
+import { Skeleton } from "antd";
+import { useSelector } from "react-redux";
 import { LevelCard } from "./components/LevelCard";
 import { BadgeGrid } from "./components/BadgeGrid";
 import { CertificateSection } from "./components/CertificateSection";
 import { StatsTab } from "./components/StatsTab";
 import { SettingsTab } from "./components/SettingsTab";
+import {
+  useGetMyLevelQuery,
+  useGetMyBadgesQuery,
+  useGetAvailableBadgesQuery,
+  useGetMyCertificatesQuery,
+} from "@/apis/profile/profileService";
+import { useGetUserMeQuery } from "@/apis/dashboard/dashboardService";
 import type {
-  UserProfile,
-  LevelInfo,
-  EarnedBadge,
-  AvailableBadge,
   Certificate,
   AssessmentAttempt,
   LessonProgressSummary,
 } from "@/apis/profile/types";
-
-const MOCK_USER: UserProfile = {
-  id: "u1",
-  firstName: "Alex",
-  lastName: "Johnson",
-  email: "alex@example.com",
-  avatar: null,
-  profile: {
-    goal: "Become a frontend developer",
-    trackSlug: "frontend",
-    xp: 566,
-    level: 1,
-  },
-};
-
-const MOCK_LEVEL: LevelInfo = {
-  xp: 566,
-  level: 1,
-  levelName: "Explorer",
-  nextLevel: {
-    level: 10,
-    name: "Builder",
-    xpRequired: 500,
-    xpRemaining: 0,
-    progress: 100,
-  },
-};
-
-const MOCK_EARNED: EarnedBadge[] = [
-  {
-    id: "b1",
-    name: "First Assessment",
-    description: "Completed first assessment",
-    earnedAt: "2026-07-16T12:29:37.874Z",
-  },
-  {
-    id: "b2",
-    name: "HTML Expert",
-    description: "Scored 75%+ in HTML",
-    earnedAt: "2026-07-16T12:29:37.874Z",
-  },
-  {
-    id: "b3",
-    name: "Quick Learner",
-    description: "Scored 70%+ overall",
-    earnedAt: "2026-07-16T12:29:37.874Z",
-  },
-];
-
-const MOCK_AVAILABLE: AvailableBadge[] = [
-  {
-    id: "bd1",
-    name: "React Pro",
-    description: "Scored above 75% in React",
-    criteria: { type: "quiz_score", topic: "React", minScore: 75 },
-  },
-  {
-    id: "bd2",
-    name: "JavaScript Proficient",
-    criteria: { type: "quiz_score", topic: "JavaScript", minScore: 75 },
-  },
-  {
-    id: "bd3",
-    name: "Practice Champion",
-    criteria: { type: "practice_count", count: 10 },
-  },
-  {
-    id: "bd4",
-    name: "Top Performer",
-    criteria: { type: "overall_score", minScore: 90 },
-  },
-];
-
-const MOCK_CERTIFICATES: Certificate[] = [];
-
-const MOCK_ATTEMPTS: AssessmentAttempt[] = [
-  {
-    percentageScore: 68,
-    config: { name: "Frontend Developer Assessment" },
-    completedAt: "2026-07-14T00:00:00Z",
-  },
-];
-
-const MOCK_PROGRESS: LessonProgressSummary = {
-  topicProgress: [
-    {
-      topicId: "js-uuid",
-      topicName: "JavaScript Fundamentals",
-      parentTopic: "Programming",
-      totalLessons: 9,
-      completedLessons: 9,
-      percentage: 100,
-      enrolledAt: "2026-07-16T00:00:00Z",
-    },
-    {
-      topicId: "react-uuid",
-      topicName: "React Essentials",
-      parentTopic: "Programming",
-      totalLessons: 10,
-      completedLessons: 0,
-      percentage: 0,
-      enrolledAt: "2026-07-16T00:00:00Z",
-    },
-  ],
-  recentlyCompleted: [
-    {
-      completed: true,
-      score: 85,
-      completedAt: "2026-07-14T00:00:00Z",
-      lesson: { title: "ES6+ Features", topicId: "js-uuid" },
-    },
-  ],
-  totalLessonsCompleted: 9,
-};
+import type { RootState } from "@/store";
+import Image from "next/image";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { UserIcon } from "@hugeicons/core-free-icons";
 
 type Tab = "overview" | "stats" | "settings";
 
 export default function ProfilePage() {
   const [tab, setTab] = useState<Tab>("overview");
+  const { accessToken } = useSelector((s: RootState) => s.tokens);
 
-  const user = MOCK_USER;
-  const level = MOCK_LEVEL;
+  const { data: meData, isLoading: meLoading } = useGetUserMeQuery(undefined, {
+    skip: !accessToken,
+  });
+  const { data: levelData, isLoading: levelLoading } = useGetMyLevelQuery();
+  const { data: earnedBadges = [], isLoading: badgesLoading } =
+    useGetMyBadgesQuery();
+  const { data: availableBadges = [] } = useGetAvailableBadgesQuery();
+  const { data: rawCerts = [], isLoading: certsLoading } =
+    useGetMyCertificatesQuery();
+
+  // Map MyCertificate → Certificate shape used by CertificateSection
+  const certificates: Certificate[] = rawCerts.map((c) => ({
+    certificateId: c.certificateId,
+    courseName: c.topic.name,
+    grade: c.grade,
+    issuedAt: c.issuedAt,
+    topic: { name: c.topic.name, imageUrl: null },
+  }));
+
+  // Extract assessment attempts from /api/users/me
+  const assessmentAttempts: AssessmentAttempt[] = (
+    (meData?.assessmentAttempts as any[]) ?? []
+  ).map((a: any) => ({
+    percentageScore: a.percentageScore,
+    config: { name: a.config?.name ?? "Assessment" },
+    completedAt: a.completedAt,
+  }));
+
+  // Derive lesson progress from dashboard/me data — stub empty if not available
+  // A dedicated /api/users/lesson-progress endpoint would be ideal; use empty for now
+  const lessonProgress: LessonProgressSummary = {
+    topicProgress: [],
+    recentlyCompleted: [],
+    totalLessonsCompleted: 0,
+  };
+
+  const isLoading = meLoading || levelLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-16 h-16 rounded-full bg-[#F3F4F6] animate-pulse" />
+          <div className="flex-1">
+            <Skeleton active paragraph={{ rows: 1 }} title={{ width: "40%" }} />
+          </div>
+        </div>
+        <Skeleton active paragraph={{ rows: 8 }} />
+      </div>
+    );
+  }
+
+  const user = meData
+    ? {
+        id: meData.id,
+        firstName: meData.firstName,
+        lastName: meData.lastName,
+        email: meData.email,
+        avatar: meData.avatar,
+        profile: {
+          goal: (meData.profile as any)?.goal,
+          trackSlug: (meData.profile as any)?.trackSlug ?? null,
+          xp: (meData.profile as any)?.xp ?? 0,
+          level: (meData.profile as any)?.level ?? 1,
+          experienceLevel: (meData.profile as any)?.experienceLevel,
+          learningStyle: (meData.profile as any)?.learningStyle,
+          weeklyHours: (meData.profile as any)?.weeklyHours,
+        },
+      }
+    : null;
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen w-full">
       <div className="flex items-center gap-4 mb-8">
-        <img
-          src={
-            user.avatar ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName}`
-          }
-          alt=""
-          className="w-16 h-16 rounded-full object-cover"
-        />
+        {user?.avatar ? (
+          <Image
+            src={user.avatar}
+            alt={"User"}
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-full object-cover"
+          />
+        ) : (
+          <HugeiconsIcon icon={UserIcon} size={32} className="text-gray-400" />
+        )}
+
         <div>
           <h1 className="text-2xl font-semibold text-[#0e1430]">
             {user.firstName} {user.lastName}
@@ -187,7 +157,11 @@ export default function ProfilePage() {
 
       {tab === "overview" && (
         <div className="flex flex-col gap-8">
-          <LevelCard level={level} />
+          {levelData ? (
+            <LevelCard level={levelData} />
+          ) : (
+            <Skeleton active paragraph={{ rows: 2 }} />
+          )}
 
           <div>
             <h2
@@ -196,7 +170,11 @@ export default function ProfilePage() {
             >
               Badges
             </h2>
-            <BadgeGrid earned={MOCK_EARNED} available={MOCK_AVAILABLE} />
+            {badgesLoading ? (
+              <Skeleton active paragraph={{ rows: 3 }} />
+            ) : (
+              <BadgeGrid earned={earnedBadges} available={availableBadges} />
+            )}
           </div>
 
           <div>
@@ -206,13 +184,20 @@ export default function ProfilePage() {
             >
               Certificates
             </h2>
-            <CertificateSection certificates={MOCK_CERTIFICATES} />
+            {certsLoading ? (
+              <Skeleton active paragraph={{ rows: 2 }} />
+            ) : (
+              <CertificateSection certificates={certificates} />
+            )}
           </div>
         </div>
       )}
 
       {tab === "stats" && (
-        <StatsTab attempts={MOCK_ATTEMPTS} lessonProgress={MOCK_PROGRESS} />
+        <StatsTab
+          attempts={assessmentAttempts}
+          lessonProgress={lessonProgress}
+        />
       )}
 
       {tab === "settings" && <SettingsTab user={user} />}

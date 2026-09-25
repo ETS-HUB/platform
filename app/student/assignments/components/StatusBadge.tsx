@@ -17,6 +17,12 @@ const STATUS_META: Record<
     bg: "#FFF3E0",
     icon: Clock,
   },
+  IN_REVIEW: {
+    label: "In review",
+    color: "#3A0CA3",
+    bg: "#EDE0FB",
+    icon: Clock,
+  },
   APPROVED: {
     label: "Approved",
     color: "#059669",
@@ -27,6 +33,12 @@ const STATUS_META: Record<
     label: "Needs changes",
     color: "#DC2626",
     bg: "#FEF2F2",
+    icon: AlertCircle,
+  },
+  RESUBMIT: {
+    label: "Resubmit requested",
+    color: "#F97316",
+    bg: "#FFF7ED",
     icon: AlertCircle,
   },
 };

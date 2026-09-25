@@ -13,10 +13,10 @@ export function CertificateSection({
         style={{ background: "#F5EEFE", border: "1.5px dashed #DDC9F0" }}
       >
         <Award size={28} style={{ color: "#C9BEDD" }} />
-        <p className="text-[13.5px] font-semibold" style={{ color: "#0e1430" }}>
+        <p className="text-base font-semibold" style={{ color: "#0e1430" }}>
           No certificates yet
         </p>
-        <p className="text-[12px] max-w-xs" style={{ color: "#8B84A0" }}>
+        <p className="text-sm max-w-xs" style={{ color: "#8B84A0" }}>
           Complete a course, get all projects approved, and keep your quiz
           participation up to earn one.
         </p>

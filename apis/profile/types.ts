@@ -32,6 +32,7 @@ export interface EarnedBadge {
   name: string;
   description: string;
   imageUrl?: string | null;
+  icon?: string | null; // emoji from API (legacy field)
   earnedAt: string;
 }
 
@@ -39,7 +40,9 @@ export interface AvailableBadge {
   id: string;
   name: string;
   imageUrl?: string | null;
+  icon?: string | null; // emoji from API
   description?: string;
+  isActive?: boolean;
   criteria: {
     type: "quiz_score" | "practice_count" | "overall_score";
     topic?: string;

@@ -1,5 +1,10 @@
 export type AssignmentType = "EXERCISE" | "PROJECT";
-export type SubmissionStatus = "SUBMITTED" | "APPROVED" | "REJECTED";
+export type SubmissionStatus =
+  | "SUBMITTED"
+  | "IN_REVIEW"
+  | "APPROVED"
+  | "REJECTED"
+  | "RESUBMIT";
 
 export interface SubmittedFile {
   url: string;

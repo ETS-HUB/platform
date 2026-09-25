@@ -8,6 +8,8 @@ const TYPE_META: Record<
   TUTORIAL: { label: "Tutorial", color: "#3A0CA3", icon: BookOpen },
   VIDEO: { label: "Video", color: "#F52593", icon: SquarePlay },
   DOCUMENTATION: { label: "Docs", color: "#7408b3", icon: FileCode },
+  ARTICLE: { label: "Article", color: "#059669", icon: File },
+  EXERCISE: { label: "Exercise", color: "#D97706", icon: FileCode },
 };
 
 export function ResourceTypeBadge({ type }: { type: ResourceType }) {

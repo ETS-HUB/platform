@@ -1,4 +1,9 @@
-export type ResourceType = "TUTORIAL" | "VIDEO" | "DOCUMENTATION";
+export type ResourceType =
+  | "VIDEO"
+  | "ARTICLE"
+  | "EXERCISE"
+  | "DOCUMENTATION"
+  | "TUTORIAL";
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
 export type LearningStyle = "VISUAL" | "READING" | "HANDS_ON";
 
@@ -13,13 +18,13 @@ export interface RecommendedResource {
 
 export interface LibraryResource {
   id: string;
-  topicId: string;
+  topicId?: string;
   title: string;
   url: string;
   type: ResourceType;
   difficulty: Difficulty;
-  learningStyle: LearningStyle;
-  description: string;
+  learningStyle?: LearningStyle | null;
+  description?: string | null;
   topic: { name: string };
 }
 

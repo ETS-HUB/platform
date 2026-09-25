@@ -63,8 +63,9 @@ export default function DashboardLayout({
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
-  const displayUserImage = null;
+  const displayUserImage = user?.avatar;
   const displayUserName = user ? `${user.firstName} ${user.lastName}` : "";
+  console.log(user)
   const displayUserRole = userRole ?? user?.role;
   const displayUserEmail = userEmail ?? user?.email;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -438,12 +439,12 @@ export default function DashboardLayout({
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <button
+                  {/* <button
                     onClick={() => router.push("notifications")}
                     className="hover:scale-90 transition-all cursor-pointer relative p-2 text-gray-500 bg-gray-100 rounded-full hover:text-gray-500"
                   >
                     <HugeiconsIcon icon={Notification01Icon} size={22} />
-                  </button>
+                  </button> */}
 
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0 flex items-center gap-2 rounded-md px-2 py-1">

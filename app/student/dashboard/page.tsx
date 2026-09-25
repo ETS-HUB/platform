@@ -40,19 +40,19 @@ export default function DashboardHome() {
     skip: !accessToken,
   });
   const { data, isLoading: dashLoading } = useGetDashboardQuery(undefined, {
-    skip: !accessToken || !meData || meData.assessmentAttempts?.length === 0,
+    skip: !accessToken || !meData || meData.profile === null,
   });
 
-  // Redirect first-time users to assessment
+  // Redirect first-time users (no profile yet) to complete onboarding
+  // Only redirect if meData is fully loaded and explicitly has no profile
   useEffect(() => {
     if (!accessToken) {
       router.replace("/login");
       return;
     }
-    if (
-      meData &&
-      (!meData.assessmentAttempts || meData.assessmentAttempts.length === 0)
-    ) {
+    // Wait until meData is loaded before deciding — avoids premature redirects
+    if (!meData) return;
+    if (meData.profile === null && meData.assessmentAttempts?.length === 0) {
       router.replace("/app/assesment");
     }
   }, [accessToken, meData, router]);
@@ -389,13 +389,11 @@ export default function DashboardHome() {
               </div>
             )}
 
-            {/* suggested course */}
             {data?.suggestedCourses[0] && (
               <div
                 className="rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden"
                 style={{ background: "#C6F135" }}
               >
-                {/* subtle decorative shape instead of a photo — keeps the flat-color energy but adds depth */}
                 <div
                   className="absolute rounded-full pointer-events-none"
                   style={{

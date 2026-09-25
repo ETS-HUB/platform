@@ -20,6 +20,7 @@ export const api = createApi({
     "Badges",
     "Tracks",
     "Certificates",
+    "Leaderboard",
   ] as const,
   endpoints: () => ({}),
   refetchOnMountOrArgChange: 1,

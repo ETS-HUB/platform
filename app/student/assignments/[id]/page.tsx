@@ -2,49 +2,23 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, FileCode2, Rocket } from "lucide-react";
+import { Skeleton } from "antd";
+import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
+
 import { StatusBadge } from "../components/StatusBadge";
 import { DueDateLabel } from "../components/DueDateLabel";
 import { SubmissionStatusCard } from "../components/SubmissionStatusCard";
 import { SubmittedContentPreview } from "../components/SubmittedContentPreview";
 import { SubmissionForm } from "../components/SubmissionForm";
-import type { AssignmentDetail, SubmittedFile } from "@/apis/assignments/types";
+import {
+  useGetAssignmentDetailQuery,
+  useSubmitAssignmentMutation,
+} from "@/apis/assignments/assignmentService";
+import type { SubmittedFile } from "@/apis/assignments/types";
+import type { RootState } from "@/store";
 import { TextBlock } from "../../learn/[slug]/lesson/components/blocks/TextBlock";
-
-const MOCK_ASSIGNMENT: AssignmentDetail = {
-  id: "ass-2-uuid",
-  title: "Final Project: Build a Quiz App",
-  description:
-    "## Build a JavaScript Quiz App\n\nCreate a fully functional quiz application...",
-  type: "PROJECT",
-  dueDate: "2026-07-31T00:00:00.000Z",
-  points: 100,
-  requiresLink: true,
-  requiresFile: false,
-  requiresText: true,
-  isPublished: true,
-  createdBy: { firstName: "Sarah", lastName: "Mitchell", avatar: null },
-  lesson: {
-    id: "lesson-9-uuid",
-    title: "Final Project: Build a Quiz App",
-    order: 9,
-  },
-  mySubmission: {
-    status: "SUBMITTED",
-    link: "https://github.com/alex-johnson/js-quiz-app",
-    files: [
-      {
-        url: "#",
-        fileName: "quiz-screenshot.png",
-        fileType: "image/png",
-        fileSize: 340000,
-      },
-    ],
-    text: "Built with vanilla JS.",
-    score: null,
-    feedback: null,
-    submittedAt: "2026-07-17T00:00:00.000Z",
-  },
-};
+import { uploadMultipleFiles } from "@/apis/upload/uploadService";
 
 const TYPE_META = {
   EXERCISE: { icon: FileCode2, label: "Exercise", color: "#3A0CA3" },
@@ -55,21 +29,73 @@ export default function AssignmentDetailPage() {
   const router = useRouter();
   const params = useParams();
   const assignmentId = params.id as string;
+  const { accessToken } = useSelector((s: RootState) => s.tokens);
 
-  const assignment = MOCK_ASSIGNMENT;
-  const meta = TYPE_META[assignment.type];
-  const Icon = meta.icon;
-  const submission = assignment.mySubmission;
-  const canSubmitOrResubmit = !submission || submission.status === "REJECTED";
+  const { data: assignment, isLoading } = useGetAssignmentDetailQuery(
+    assignmentId,
+    { skip: !assignmentId },
+  );
+  const [submitAssignment] = useSubmitAssignmentMutation();
 
   const handleSubmit = async (payload: {
     link?: string;
-    files?: SubmittedFile[];
+    files?: File[];
     text?: string;
   }) => {
-    // Stub — replace with usePostSubmitAssignmentMutation(assignmentId, payload)
-    await new Promise((r) => setTimeout(r, 600));
+    if (!assignment || !accessToken) return;
+
+    let uploadedFiles: SubmittedFile[] = [];
+
+    if (payload.files && payload.files.length > 0) {
+      const results = await uploadMultipleFiles(
+        payload.files,
+        accessToken,
+        "submissions",
+      );
+      uploadedFiles = results.map((r, i) => ({
+        url: r.url,
+        fileName: payload.files![i].name,
+        fileType: payload.files![i].type,
+        fileSize: payload.files![i].size,
+      }));
+    }
+
+    await submitAssignment({
+      assignmentId: assignment.id,
+      payload: {
+        link: payload.link,
+        files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
+        text: payload.text,
+      },
+    }).unwrap();
+
+    toast.success("Assignment submitted!");
   };
+
+  if (isLoading || !assignment) {
+    return (
+      <div className="min-h-screen w-full">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="flex cursor-pointer text-[#8A8A8A] items-center gap-1.5 text-sm hover:scale-105 transition-transform font-medium mb-5"
+        >
+          <ArrowLeft size={14} />
+          Back to assignments
+        </button>
+        <Skeleton active paragraph={{ rows: 6 }} />
+      </div>
+    );
+  }
+
+  const meta =
+    TYPE_META[assignment.type as keyof typeof TYPE_META] ?? TYPE_META.EXERCISE;
+  const Icon = meta.icon;
+  const submission = assignment.mySubmission;
+  const canSubmitOrResubmit =
+    !submission ||
+    submission.status === "REJECTED" ||
+    submission.status === "RESUBMIT";
 
   return (
     <div className="min-h-screen w-full">
@@ -101,7 +127,7 @@ export default function AssignmentDetailPage() {
           </span>
         </div>
 
-          <h1 className="text-[22px] font-semibold mb-2 text-[#0e1430] font-noto">
+        <h1 className="text-[22px] font-semibold mb-2 text-[#0e1430] font-noto">
           {assignment.title}
         </h1>
 

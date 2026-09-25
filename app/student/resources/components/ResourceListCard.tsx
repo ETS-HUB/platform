@@ -11,8 +11,10 @@ const STYLE_META: Record<LearningStyle, { label: string; icon: typeof Eye }> = {
 };
 
 export function ResourceListCard({ resource }: { resource: LibraryResource }) {
-  const styleMeta = STYLE_META[resource.learningStyle];
-  const StyleIcon = styleMeta.icon;
+  const styleMeta = resource.learningStyle
+    ? STYLE_META[resource.learningStyle]
+    : null;
+  const StyleIcon = styleMeta?.icon;
 
   return (
     <Link
@@ -25,14 +27,15 @@ export function ResourceListCard({ resource }: { resource: LibraryResource }) {
       <div className="flex flex-col gap-3 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <ResourceTypeBadge type={resource.type} />
-          <span
-            className="text-sm bg-[#F5F5F5] text-[#6B7280] font-medium px-2 py-0.5 rounded-full"
-          >
+          <span className="text-sm bg-[#F5F5F5] text-[#6B7280] font-medium px-2 py-0.5 rounded-full">
             {resource.topic.name}
           </span>
         </div>
 
-        <h3 className="text-lg font-semibold leading-snug" style={{ color: "#0e1430" }}>
+        <h3
+          className="text-lg font-semibold leading-snug"
+          style={{ color: "#0e1430" }}
+        >
           {resource.title}
         </h3>
 
@@ -44,14 +47,23 @@ export function ResourceListCard({ resource }: { resource: LibraryResource }) {
 
         <div className="flex items-center gap-3 mt-1">
           <DifficultyDot difficulty={resource.difficulty} />
-          <span className="inline-flex items-center gap-1 text-base" style={{ color: "#9CA3AF" }}>
-            <StyleIcon size={11} />
-            {styleMeta.label}
-          </span>
+          {styleMeta && StyleIcon && (
+            <span
+              className="inline-flex items-center gap-1 text-base"
+              style={{ color: "#9CA3AF" }}
+            >
+              <StyleIcon size={11} />
+              {styleMeta.label}
+            </span>
+          )}
         </div>
       </div>
 
-      <ExternalLink size={20} style={{ color: "#C9BEDD" }} className="shrink-0 mt-1" />
+      <ExternalLink
+        size={20}
+        style={{ color: "#C9BEDD" }}
+        className="shrink-0 mt-1"
+      />
     </Link>
   );
 }

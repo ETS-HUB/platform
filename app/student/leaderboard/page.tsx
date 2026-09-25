@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { Trophy, Zap, BookOpen, ClipboardCheck } from "lucide-react";
-import { Select } from "antd";
+import { Select, Skeleton } from "antd";
+import { useSelector } from "react-redux";
 import { LeaderboardRow } from "../profile/components/LeaderboardRow";
 import { MyRankCard } from "../profile/components/MyRankCard";
-import type { LeaderboardCategory, MyRankResponse } from "@/apis/profile/types";
+import { useGetMyRankQuery } from "@/apis/profile/profileService";
+import type { LeaderboardCategory } from "@/apis/profile/types";
+import type { RootState } from "@/store";
 
 const CATEGORY_META: Record<
   LeaderboardCategory,
@@ -16,54 +19,15 @@ const CATEGORY_META: Record<
   assessment: { label: "Assessment", icon: ClipboardCheck },
 };
 
-// Replace with useGetMyRankQuery({ category, track }) — shape matches exactly
-const MOCK_MY_RANK: MyRankResponse = {
-  myRank: 1,
-  myEntry: {
-    rank: 1,
-    userId: "u1",
-    firstName: "Alex",
-    xp: 566,
-    trackSlug: "frontend",
-  },
-  top10: [
-    {
-      rank: 1,
-      userId: "u1",
-      firstName: "Alex",
-      lastName: "Johnson",
-      xp: 566,
-      level: 1,
-      trackSlug: "frontend",
-    },
-    {
-      rank: 2,
-      userId: "u2",
-      firstName: "Mike",
-      lastName: "Student",
-      xp: 289,
-      level: 1,
-      trackSlug: null,
-    },
-    {
-      rank: 3,
-      userId: "u3",
-      firstName: "Ethan",
-      lastName: "Student",
-      xp: 263,
-      level: 1,
-      trackSlug: null,
-    },
-  ],
-  surrounding: [],
-  totalParticipants: 9,
-};
-
 export default function LeaderboardPage() {
+  const { accessToken } = useSelector((s: RootState) => s.tokens);
   const [category, setCategory] = useState<LeaderboardCategory>("xp");
   const [track, setTrack] = useState<string | undefined>(undefined);
 
-  const data = MOCK_MY_RANK; // swap for real query keyed on { category, track }
+  const { data, isLoading } = useGetMyRankQuery(
+    { category, track },
+    { skip: !accessToken },
+  );
 
   return (
     <div className="min-h-screen w-full max-w-2xl mx-auto">
@@ -75,13 +39,15 @@ export default function LeaderboardPage() {
           <Trophy size={24} style={{ color: "#3A0CA3" }} />
           Leaderboard
         </h1>
-        <p className="text-[14px]" style={{ color: "#6B7280" }}>
-          {data.totalParticipants} students competing
-        </p>
+        {data && (
+          <p className="text-[14px]" style={{ color: "#6B7280" }}>
+            {data.totalParticipants} students competing
+          </p>
+        )}
       </div>
 
-      {/* category switch */}
-      <div className="flex items-center gap-2 mb-5">
+      {/* category + track filters */}
+      <div className="flex items-center gap-2 mb-5 flex-wrap">
         {(Object.keys(CATEGORY_META) as LeaderboardCategory[]).map((key) => {
           const meta = CATEGORY_META[key];
           const Icon = meta.icon;
@@ -119,18 +85,23 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      <MyRankCard data={data} category={category} />
-
-      <div className="flex flex-col gap-1.5">
-        {data.top10.map((entry) => (
-          <LeaderboardRow
-            key={entry.rank}
-            entry={entry}
-            category={category}
-            isCurrentUser={entry.rank === data.myRank}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <Skeleton active paragraph={{ rows: 10 }} />
+      ) : data ? (
+        <>
+          <MyRankCard data={data} category={category} />
+          <div className="flex flex-col gap-1.5">
+            {data.top10.map((entry) => (
+              <LeaderboardRow
+                key={entry.rank}
+                entry={entry}
+                category={category}
+                isCurrentUser={entry.rank === data.myRank}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

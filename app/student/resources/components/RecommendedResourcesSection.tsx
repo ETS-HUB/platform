@@ -1,41 +1,14 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
+import { Skeleton } from "antd";
 import { RecommendedResourceCard } from "./RecommendedResourceCard";
-import type { RecommendedResource } from "@/apis/resources/types";
-
-// Replace with useGetRecommendedResourcesQuery() — shape matches exactly
-const MOCK_RECOMMENDED: RecommendedResource[] = [
-  {
-    id: "r1",
-    title: "JavaScript.info",
-    url: "https://javascript.info/",
-    type: "TUTORIAL",
-    topic: "JavaScript",
-    difficulty: "EASY",
-  },
-  {
-    id: "r2",
-    title: "Traversy Media JS Crash Course",
-    url: "https://youtube.com/watch?v=example",
-    type: "VIDEO",
-    topic: "JavaScript",
-    difficulty: "EASY",
-  },
-  {
-    id: "r3",
-    title: "React Official Docs",
-    url: "https://react.dev/learn",
-    type: "DOCUMENTATION",
-    topic: "React",
-    difficulty: "MEDIUM",
-  },
-];
+import { useGetRecommendedResourcesQuery } from "@/apis/resources/resourcesService";
 
 export function RecommendedResourcesSection() {
-  const resources = MOCK_RECOMMENDED;
+  const { data: resources = [], isLoading } = useGetRecommendedResourcesQuery();
 
-  if (resources.length === 0) return null;
+  if (!isLoading && resources.length === 0) return null;
 
   return (
     <div>
@@ -47,11 +20,24 @@ export function RecommendedResourcesSection() {
         Based on topics you&apos;ve struggled with and how you learn best.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {resources.map((r) => (
-          <RecommendedResourceCard key={r.id} resource={r} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl p-4 bg-white border border-[#EDE0FB]"
+            >
+              <Skeleton active paragraph={{ rows: 2 }} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {resources.map((r) => (
+            <RecommendedResourceCard key={r.id} resource={r} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

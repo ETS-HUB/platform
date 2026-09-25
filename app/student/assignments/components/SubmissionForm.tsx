@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Upload, Link2, FileText, X, Loader2 } from "lucide-react";
-import { Input, message } from "antd";
-import type { SubmittedFile } from "@/apis/assignments/types";
+import { Input } from "antd";
+import toast from "react-hot-toast";
 
 function looksLikeUrl(value: string) {
   if (!value.trim()) return true;
@@ -28,7 +28,7 @@ export function SubmissionForm({
   isResubmit: boolean;
   onSubmit: (payload: {
     link?: string;
-    files?: SubmittedFile[];
+    files?: File[];
     text?: string;
   }) => Promise<void>;
 }) {
@@ -56,14 +56,13 @@ export function SubmissionForm({
     }
     setSubmitting(true);
     try {
-      // File upload step happens here in the real implementation —
-      // uploaded results become SubmittedFile[] before calling onSubmit
       await onSubmit({
-        link: requiresLink ? link.trim() : undefined,
-        text: requiresText ? text.trim() : undefined,
+        link: requiresLink ? link.trim() || undefined : undefined,
+        files: requiresFile && files.length > 0 ? files : undefined,
+        text: requiresText ? text.trim() || undefined : undefined,
       });
     } catch {
-      message.error("Submission failed. Please try again.");
+      toast.error("Submission failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
