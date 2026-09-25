@@ -15,8 +15,8 @@ export interface UpdateProfilePayload {
   lastName?: string;
   goal?: string;
   trackSlug?: string | null;
-  experienceLevel?: string;
-  learningStyle?: string;
+  experienceLevel?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  learningStyle?: "VISUAL" | "READING" | "HANDS_ON";
   weeklyHours?: number;
 }
 

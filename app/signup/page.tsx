@@ -27,7 +27,7 @@ interface SignupFormValues {
 interface ProfileFormValues {
   goal: string;
   experienceLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
-  learningStyle: "VISUAL" | "AUDITORY" | "READING" | "KINESTHETIC";
+  learningStyle: "VISUAL" | "READING" | "HANDS_ON";
   weeklyHours: number;
 }
 
@@ -102,7 +102,7 @@ export default function SignupPage() {
         <Image
           src="/logo.png"
           alt="Genius Tutors Logo"
-          width={210}
+          width={170}
           height={40}
           className="object-contain cursor-pointer"
           onClick={() => router.push("/")}
@@ -415,16 +415,12 @@ export default function SignupPage() {
                       options={[
                         { value: "VISUAL", label: "Visual (videos, diagrams)" },
                         {
-                          value: "AUDITORY",
-                          label: "Auditory (lectures, discussions)",
-                        },
-                        {
                           value: "READING",
                           label: "Reading (articles, documentation)",
                         },
                         {
-                          value: "KINESTHETIC",
-                          label: "Kinesthetic (hands-on projects)",
+                          value: "HANDS_ON",
+                          label: "Hands-on (projects, exercises)",
                         },
                       ]}
                     />

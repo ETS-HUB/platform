@@ -67,7 +67,7 @@ function OnboardingForm({ onComplete }: { onComplete: () => void }) {
     "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
   >("BEGINNER");
   const [learningStyle, setLearningStyle] = useState<
-    "VISUAL" | "AUDITORY" | "READING" | "KINESTHETIC"
+    "VISUAL" | "READING" | "HANDS_ON"
   >("VISUAL");
   const [weeklyHours, setWeeklyHours] = useState(10);
   const [submitting, setSubmitting] = useState(false);
@@ -216,9 +216,8 @@ function OnboardingForm({ onComplete }: { onComplete: () => void }) {
               {(
                 [
                   { value: "VISUAL", label: "Visual", emoji: "👁️" },
-                  { value: "AUDITORY", label: "Auditory", emoji: "🎧" },
                   { value: "READING", label: "Reading", emoji: "📖" },
-                  { value: "KINESTHETIC", label: "Hands-on", emoji: "🛠️" },
+                  { value: "HANDS_ON", label: "Hands-on", emoji: "🛠️" },
                 ] as const
               ).map((s) => (
                 <button

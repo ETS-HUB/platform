@@ -62,7 +62,7 @@ export interface CreateProfileRequest {
   goal: string;
   trackSlug?: string;
   experienceLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
-  learningStyle: "VISUAL" | "AUDITORY" | "READING" | "KINESTHETIC";
+  learningStyle: "VISUAL" | "READING" | "HANDS_ON";
   weeklyHours: number;
 }
 

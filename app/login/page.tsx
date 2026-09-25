@@ -158,6 +158,16 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen relative">
       <AuthBranding />
+      <div className="absolute -top-10 sm:top-5 sm:left-10 z-20">
+        <Image
+          src="/logo.png"
+          alt="Genius Tutors Logo"
+          width={170}
+          height={40}
+          className="object-contain cursor-pointer"
+          onClick={() => router.push("/")}
+        />
+      </div>
 
       <div className="absolute -top-10 sm:-top-12 sm:left-0 z-20">
         <Image
