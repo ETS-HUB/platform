@@ -14,7 +14,11 @@ export function getBaseUrl(): string {
  * The backend API base URL — used when calling the backend directly.
  */
 export function getBackendUrl(): string {
-  return process.env.BACKEND_API_URL || "http://localhost:3000";
+  return (
+    process.env.BACKEND_API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:3000"
+  );
 }
 
 /**

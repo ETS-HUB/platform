@@ -10,10 +10,12 @@ import { setTokens } from "@/store/slices/auth/tokenSlice";
 import { setAuthTokenCookie } from "@/lib/authCookies";
 import type { AppDispatch } from "@/store";
 
-const redirectMap: Record<string, string> = {
+const roleRedirectMap: Record<string, string> = {
   TUTOR: "/tutor/dashboard",
   PARENT: "/parent/dashboard",
   STUDENT: "/student/dashboard",
+  ADMIN: "/core/admin/overview",
+  SUPER_ADMIN: "/core/admin/overview",
 };
 
 export default function AuthCallbackPage() {
@@ -26,17 +28,64 @@ export default function AuthCallbackPage() {
     if (processed.current) return;
     processed.current = true;
 
-    const accessToken = searchParams.get("accessToken");
-    const refreshToken = searchParams.get("refreshToken");
-    const userParam = searchParams.get("user");
     const error = searchParams.get("error");
-    const redirect = searchParams.get("redirect");
 
     if (error) {
-      toast.error(error || "Social login failed. Please try again.");
+      toast.error(
+        decodeURIComponent(error) || "Social login failed. Please try again.",
+      );
       router.replace("/login");
       return;
     }
+
+    // ── Backend redirect-flow shape: ?token=...&nextStep=... ──────────────
+    const token = searchParams.get("token");
+    const nextStep = searchParams.get("nextStep");
+
+    if (token) {
+      try {
+        // Decode the JWT payload to extract user info (no verification needed —
+        // backend already validated it)
+        const parts = token.split(".");
+        const payload = JSON.parse(
+          atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+        );
+
+        const user = {
+          id: payload.sub || payload.id,
+          email: payload.email,
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          role: payload.role,
+          avatar: payload.avatar || null,
+        };
+
+        dispatch(setCredentials({ user }));
+        dispatch(setTokens({ accessToken: token, refreshToken: "" }));
+        setAuthTokenCookie(token);
+
+        toast.success("Login successful!");
+
+        // nextStep=onboarding → assessment flow; otherwise role-based redirect
+        if (nextStep === "onboarding" && user.role === "STUDENT") {
+          router.replace("/app/assesment");
+          return;
+        }
+
+        const roleKey = user.role?.toUpperCase();
+        router.replace(roleRedirectMap[roleKey] || "/");
+      } catch {
+        toast.error("Failed to process login. Please try again.");
+        router.replace("/login");
+      }
+      return;
+    }
+
+    // ── Legacy Next.js proxy shape: ?accessToken=...&refreshToken=...&user=... ─
+    const accessToken = searchParams.get("accessToken");
+    const refreshToken = searchParams.get("refreshToken");
+    const userParam = searchParams.get("user");
+    const redirect = searchParams.get("redirect");
 
     if (!accessToken || !refreshToken || !userParam) {
       toast.error("Invalid callback response. Please try again.");
@@ -53,11 +102,14 @@ export default function AuthCallbackPage() {
 
       toast.success("Login successful!");
 
-      const roleKey = user.role?.toUpperCase();
-      const roleRedirect = roleKey ? redirectMap[roleKey] : null;
-      const targetUrl = redirect || roleRedirect || "/";
+      if (nextStep === "onboarding" && user.role === "STUDENT") {
+        router.replace("/app/assesment");
+        return;
+      }
 
-      router.replace(targetUrl);
+      const roleKey = user.role?.toUpperCase();
+      const roleRedirect = roleKey ? roleRedirectMap[roleKey] : null;
+      router.replace(redirect || roleRedirect || "/");
     } catch {
       toast.error("Failed to process login. Please try again.");
       router.replace("/login");
@@ -67,7 +119,10 @@ export default function AuthCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#1F5226] border-r-transparent" />
+        <div
+          className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-r-transparent"
+          style={{ borderColor: "#3A0CA3 transparent transparent transparent" }}
+        />
         <p className="mt-4 text-sm text-gray-500">Completing sign in...</p>
       </div>
     </div>

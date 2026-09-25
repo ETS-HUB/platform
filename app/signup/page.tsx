@@ -43,7 +43,11 @@ export default function SignupPage() {
   );
 
   const handleSocialLogin = (provider: "google" | "facebook") => {
-    window.location.href = `/api/auth/${provider}`;
+    // Redirect straight to the backend's Passport OAuth flow.
+    // Backend handles the exchange and redirects to FRONTEND_URL/auth/callback?token=...&nextStep=...
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+    window.location.href = `${backendUrl}/api/auth/${provider}`;
   };
 
   async function handleSignup(values: SignupFormValues) {
