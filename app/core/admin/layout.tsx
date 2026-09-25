@@ -4,9 +4,14 @@ import React from "react";
 import { App } from "antd";
 import { usePathname } from "next/navigation";
 import {
+  AssignmentsIcon,
   CalendarMortarboardFreeIcons,
+  Certificate01FreeIcons,
+  CheckmarkBadge01FreeIcons,
   DashboardSquare02Icon,
   FolderIcon,
+  FolderLibraryIcon,
+  Footprints,
   NotebookPen,
   ResourcesAddFreeIcons,
   Users,
@@ -49,27 +54,27 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       path: "/core/admin/configs",
     },
     {
-      icon: CalendarMortarboardFreeIcons,
+      icon: AssignmentsIcon,
       label: "Assignments",
       path: "/core/admin/assignments",
     },
     {
-      icon: CalendarMortarboardFreeIcons,
+      icon: FolderLibraryIcon,
       label: "Resources",
       path: "/core/admin/resources",
     },
     {
-      icon: CalendarMortarboardFreeIcons,
+      icon: CheckmarkBadge01FreeIcons,
       label: "Badges",
       path: "/core/admin/badges",
     },
     {
-      icon: CalendarMortarboardFreeIcons,
+      icon: Footprints,
       label: "Tracks",
       path: "/core/admin/tracks",
     },
     {
-      icon: CalendarMortarboardFreeIcons,
+      icon: Certificate01FreeIcons,
       label: "Certificates",
       path: "/core/admin/certificates",
     },
