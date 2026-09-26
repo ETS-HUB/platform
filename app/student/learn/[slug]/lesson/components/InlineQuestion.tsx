@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, Loader2, RotateCcw } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, RotateCcw, Sparkles } from "lucide-react";
 import type { AnswerResult, LessonQuestion } from "@/apis/lessons/types";
+import { useRequestNudgeMutation } from "@/apis/ai/aiService";
 
 interface InlineQuestionProps {
   question: LessonQuestion;
@@ -20,6 +21,71 @@ const DIFFICULTY_COLOR: Record<LessonQuestion["difficulty"], string> = {
 };
 
 type QuestionStatus = "idle" | "submitting" | "first_wrong" | "answered";
+
+/**
+ * ET — the ETS study buddy. Offers one Socratic hint per wrong answer.
+ * The hint never reveals the answer (enforced server-side); it's here to
+ * make the retry smarter, not to give it away.
+ */
+function EtNudge({ questionId, compact }: { questionId: string; compact?: boolean }) {
+  const [requestNudge, { isLoading }] = useRequestNudgeMutation();
+  const [nudge, setNudge] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const ask = async () => {
+    setError(null);
+    try {
+      const res = await requestNudge({ questionId }).unwrap();
+      setNudge(res.nudge);
+    } catch (e: any) {
+      setError(
+        e?.data?.message ||
+          "ET is unreachable right now — re-read the lesson and try again.",
+      );
+    }
+  };
+
+  return (
+    <div className={compact ? "mt-2" : "mt-3"}>
+      {!nudge && (
+        <button
+          type="button"
+          onClick={ask}
+          disabled={isLoading}
+          className="flex items-center gap-1.5 cursor-pointer text-sm font-semibold px-3 py-1.5 rounded-full shrink-0 disabled:opacity-60"
+          style={{ background: "#3A0CA3", color: "#FFFFFF" }}
+        >
+          {isLoading ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Sparkles size={14} />
+          )}
+          {isLoading ? "ET is thinking…" : "Ask ET for a nudge"}
+        </button>
+      )}
+      {error && !nudge && (
+        <p className="text-sm mt-2" style={{ color: "#991B1B" }}>
+          {error}
+        </p>
+      )}
+      {nudge && (
+        <div
+          className="rounded-lg p-3 text-base leading-relaxed"
+          style={{ background: "#F5EEFE", border: "1px solid #DDC9F0" }}
+        >
+          <p
+            className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide mb-1"
+            style={{ color: "#3A0CA3" }}
+          >
+            <Sparkles size={13} />
+            ET&rsquo;s nudge
+          </p>
+          <p style={{ color: "#0e1430" }}>{nudge}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function InlineQuestion({
   question,
@@ -159,19 +225,24 @@ export function InlineQuestion({
       </div>
 
       {status === "first_wrong" && result && (
-        <div className="mt-3 rounded-lg p-3 flex items-center justify-between">
-          <p className="text-base leading-relaxed">
-            <span className="font-semibold">Not quite.</span> You have one more
-            try.
-          </p>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="flex items-center gap-1 cursor-pointer text-sm bg-[#4a0570]/50 text-white font-semibold px-3 py-1.5 rounded-full shrink-0"
-          >
-            <RotateCcw size={14} />
-            Try again
-          </button>
+        <div className="mt-3 rounded-lg p-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <p className="text-base leading-relaxed">
+              <span className="font-semibold">Not quite.</span> You have one
+              more try.
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="flex items-center gap-1 cursor-pointer text-sm bg-[#4a0570]/50 text-white font-semibold px-3 py-1.5 rounded-full shrink-0"
+              >
+                <RotateCcw size={14} />
+                Try again
+              </button>
+            </div>
+          </div>
+          <EtNudge questionId={question.id} />
         </div>
       )}
 
@@ -189,6 +260,9 @@ export function InlineQuestion({
             ·{" "}
           </span>
           {result.explanation}
+          {!result.isCorrect && (
+            <EtNudge questionId={question.id} compact />
+          )}
         </div>
       )}
     </div>
