@@ -7,6 +7,7 @@ import {
   useAddBookmarkMutation,
   useRemoveBookmarkMutation,
 } from "@/apis/lessons/lessonsService";
+import Image from "next/image";
 
 export type { DashboardCourse };
 
@@ -80,12 +81,18 @@ export function CourseCard({ course, index, onContinue }: CourseCardProps) {
             />
           </button>
         </div>
-
+        <Image
+          src={course?.courseIcon}
+          alt={course?.courseName}
+          width={400}
+          height={200}
+          className="w-full h-45 my-4 object-cover rounded-lg"
+        />
         <h3
           className="text-[19px] font-semibold leading-snug"
           style={{ color: theme.text }}
         >
-          {course.courseIcon} {course.courseName}
+          {course.courseName}
         </h3>
         <p
           className="text-sm font-medium mb-4 mt-2"

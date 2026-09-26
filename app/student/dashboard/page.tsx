@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { Skeleton } from "antd";
 import {
   Trophy,
   BarChart3,
-  LogOut,
   ArrowRight,
   BookOpen,
   Zap,
@@ -107,7 +107,7 @@ export default function DashboardHome() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="rounded-2xl p-5 min-h-[220px]"
+                className="rounded-2xl p-5 min-h-55"
                 style={{ background: "#F3F4F6" }}
               >
                 <Skeleton active paragraph={{ rows: 4 }} />
@@ -118,68 +118,6 @@ export default function DashboardHome() {
       </div>
     );
   }
-
-  const mockDataInTop3: MyRankResponse = {
-    myRank: 1,
-    myEntry: {
-      rank: 1,
-      userId: "u1",
-      firstName: "Alex",
-      lastName: "Johnson",
-      xp: 566,
-      level: 1,
-      trackSlug: "frontend",
-    },
-    top10: [
-      {
-        rank: 1,
-        userId: "u1",
-        firstName: "Alex",
-        lastName: "Johnson",
-        xp: 566,
-        level: 1,
-        trackSlug: "frontend",
-      },
-      {
-        rank: 2,
-        userId: "u2",
-        firstName: "Mike",
-        lastName: "Student",
-        xp: 289,
-        level: 1,
-        trackSlug: null,
-      },
-      {
-        rank: 3,
-        userId: "u3",
-        firstName: "Ethan",
-        lastName: "Student",
-        xp: 263,
-        level: 1,
-        trackSlug: null,
-      },
-      {
-        rank: 4,
-        userId: "u4",
-        firstName: "Priya",
-        lastName: "Nair",
-        xp: 210,
-        level: 1,
-        trackSlug: "frontend",
-      },
-      {
-        rank: 5,
-        userId: "u5",
-        firstName: "Sam",
-        lastName: "Lee",
-        xp: 188,
-        level: 1,
-        trackSlug: null,
-      },
-    ],
-    surrounding: [],
-    totalParticipants: 9,
-  };
 
   // Outside-top-3 case — footer row shows "Your rank #7"
   const mockDataOutsideTop3: MyRankResponse = {
@@ -294,13 +232,12 @@ export default function DashboardHome() {
           </div>
         </div>
 
-        {/* Course grid */}
         {dashLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-10">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="rounded-2xl p-5 min-h-[220px]"
+                className="rounded-2xl p-5 min-h-55"
                 style={{ background: "#F3F4F6" }}
               >
                 <Skeleton active paragraph={{ rows: 4 }} />
@@ -320,7 +257,6 @@ export default function DashboardHome() {
           </div>
         )}
 
-        {/* Next lessons + suggested */}
         {dashLoading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-10">
             <div
@@ -360,10 +296,7 @@ export default function DashboardHome() {
                       style={{ borderTop: "1px solid #E5E5E5" }}
                     >
                       <div>
-                        <p
-                          className="text-[14px] font-semibold"
-                          style={{ color: "#111" }}
-                        >
+                        <p className="text-[14px] text-[#111] font-semibold">
                           {course.nextLesson!.title}
                         </p>
                         <p className="text-[12px]" style={{ color: "#8A8A8A" }}>
@@ -409,17 +342,19 @@ export default function DashboardHome() {
                   <p className="text-sm font-medium mb-3 text-[#1A1A1A]">
                     New course matching your interests
                   </p>
-                  <span
-                    className="inline-block text-[11.5px] font-semibold px-3 py-1 rounded-full mb-3"
-                    style={{ background: "#111", color: "#FFF" }}
-                  >
+                  <span className="inline-block text-[11.5px] text-white bg-[#111] font-semibold px-3 py-1 rounded-full mb-3">
                     {data.suggestedCourses[0].category}
                   </span>
-                  <h3
-                    className="text-[22px] font-bold leading-snug"
-                    style={{ color: "#111" }}
-                  >
-                    {data.suggestedCourses[0].courseIcon}{" "}
+                  {data.suggestedCourses[0].courseIcon && (
+                    <Image
+                      src={data.suggestedCourses[0].courseIcon}
+                      alt={data.suggestedCourses[0].courseName}
+                      width={400}
+                      height={200}
+                      className="w-full h-45 my-4 object-cover rounded-lg"
+                    />
+                  )}
+                  <h3 className="text-[22px] text-[#111] font-bold leading-snug">
                     {data.suggestedCourses[0].courseName}
                   </h3>
                   <p
@@ -535,7 +470,6 @@ export default function DashboardHome() {
                       </span>
                     </div>
 
-                    {/* Topic breakdown */}
                     <div className="flex flex-col gap-3">
                       {Object.values(
                         data.assessmentSummary.latest.topicScores,
@@ -581,9 +515,8 @@ export default function DashboardHome() {
                   </div>
                 )}
 
-              {/* recent activity */}
               <div
-                className="rounded-2xl p-6 border"
+                className="rounded-2xl p-6 mb-4 border"
                 style={{ background: "#FFFFFF", borderColor: "#EDEDED" }}
               >
                 <div className="flex items-center gap-2 mb-4">

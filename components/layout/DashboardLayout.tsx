@@ -113,10 +113,10 @@ export default function DashboardLayout({
           },
         ]
       : []),
-    {
-      key: "Notifications",
-      label: <span className="font-medium">Notifications</span>,
-    },
+    // {
+    //   key: "Notifications",
+    //   label: <span className="font-medium">Notifications</span>,
+    // },
     ...(isSuperAdmin
       ? [
           {
@@ -470,9 +470,9 @@ export default function DashboardLayout({
                             if (key === "view-profile") {
                               router.push("profile");
                             }
-                            if (key === "Notifications") {
-                              router.push("notifications");
-                            }
+                            // if (key === "Notifications") {
+                            //   router.push("notifications");
+                            // }
                             if (key === "Deleted users") {
                               router.push("/core/admin/users/deleted");
                             }
@@ -502,9 +502,9 @@ export default function DashboardLayout({
                           if (key === "view-profile") {
                             router.push("profile");
                           }
-                          if (key === "Notifications") {
-                            router.push("notifications");
-                          }
+                          // if (key === "Notifications") {
+                          //   router.push("notifications");
+                          // }
                           if (key === "Deleted users") {
                             router.push("/core/admin/users/deleted");
                           }

@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { usePathname } from "next/navigation";
+import { useSelector } from "react-redux";
 import {
   CalendarMortarboardFreeIcons,
   DashboardSquare02Icon,
@@ -11,13 +12,27 @@ import {
 } from "@hugeicons/core-free-icons";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useGetBookmarksQuery } from "@/apis/lessons/lessonsService";
+import { useGetMyCertificatesQuery } from "@/apis/profile/profileService";
+import type { RootState } from "@/store";
 
 const StudentLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+  const { accessToken } = useSelector((s: RootState) => s.tokens);
+
+  const { data: bookmarks = [] } = useGetBookmarksQuery(undefined, {
+    skip: !accessToken,
+  });
+  const { data: certificates = [] } = useGetMyCertificatesQuery(undefined, {
+    skip: !accessToken,
+  });
 
   if (pathname && pathname.startsWith("/login")) {
     return <>{children}</>;
   }
+
+  const savedCount = bookmarks.length || undefined;
+  const certCount = certificates.length || undefined;
 
   const studentSidebarItems = [
     {
@@ -32,11 +47,15 @@ const StudentLayout = ({ children }: { children: React.ReactNode }) => {
       children: [
         { label: "All Courses", path: "/student/learn/all" },
         { label: "Enrolled Courses", path: "/student/learn/my-courses" },
-        { label: "Saved Courses", path: "/student/learn/saved", badge: 2 },
+        {
+          label: "Saved Courses",
+          path: "/student/learn/saved",
+          ...(savedCount !== undefined ? { badge: savedCount } : {}),
+        },
         {
           label: "My Certificates",
           path: "/student/learn/certificates",
-          badge: 2,
+          ...(certCount !== undefined ? { badge: certCount } : {}),
         },
       ],
     },
@@ -50,7 +69,6 @@ const StudentLayout = ({ children }: { children: React.ReactNode }) => {
       label: "Practice",
       path: "/student/practice",
     },
-
     {
       icon: ResourcesAddFreeIcons,
       label: "Resources",

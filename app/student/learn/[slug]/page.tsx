@@ -20,6 +20,7 @@ import { useGetCourseDetailQuery } from "@/apis/dashboard/dashboardService";
 import {
   useAddBookmarkMutation,
   useRemoveBookmarkMutation,
+  useEnrollInCourseMutation,
 } from "@/apis/lessons/lessonsService";
 import { CourseDetailSkeleton } from "../components/CourseDetailSkeleton";
 import CertificateSvg from "../components/CertificateSvg";
@@ -83,6 +84,7 @@ export default function CourseDetailsPage() {
   });
   const [addBookmarkMut] = useAddBookmarkMutation();
   const [removeBookmarkMut] = useRemoveBookmarkMutation();
+  const [enrollMut, { isLoading: enrolling }] = useEnrollInCourseMutation();
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkSynced, setBookmarkSynced] = useState(false);
 
@@ -91,6 +93,15 @@ export default function CourseDetailsPage() {
     setBookmarked(data.isBookmarked ?? false);
     setBookmarkSynced(true);
   }
+
+  const handleEnroll = async () => {
+    try {
+      await enrollMut(slug).unwrap();
+      toast.success("Enrolled successfully!");
+    } catch {
+      toast.error("Failed to enroll. Please try again.");
+    }
+  };
 
   const handleBookmark = async () => {
     if (!slug) return;
@@ -313,7 +324,16 @@ export default function CourseDetailsPage() {
             )}
 
             <div className="flex items-center gap-3">
-              {nextLesson && (
+              {!enrollment.enrolled ? (
+                <button
+                  type="button"
+                  onClick={handleEnroll}
+                  disabled={enrolling}
+                  className="text-[14px] font-semibold px-6 py-2.5 rounded-lg bg-primary text-white transition-transform hover:scale-[1.03] active:scale-[0.97] disabled:opacity-60 cursor-pointer"
+                >
+                  {enrolling ? "Enrolling..." : "Enroll now"}
+                </button>
+              ) : nextLesson ? (
                 <button
                   type="button"
                   onClick={() =>
@@ -323,9 +343,9 @@ export default function CourseDetailsPage() {
                   }
                   className="text-[14px] font-semibold px-6 py-2.5 rounded-lg bg-primary text-white transition-transform hover:scale-[1.03] active:scale-[0.97] hover:bg-primary-hover active:bg-primary-active cursor-pointer"
                 >
-                  {enrollment.enrolled ? "Continue Learning" : "Start Course"}
+                  Continue Learning
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -537,9 +557,11 @@ export default function CourseDetailsPage() {
                 <div className="flex items-center justify-between">
                   <span>Track</span>
                   <span className="font-medium" style={{ color: "#0e1430" }}>
-                    {course.track
-                      .replace(/-/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    {course?.track
+                      ? course?.track
+                          .replace(/-/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase())
+                      : "N/A"}
                   </span>
                 </div>
                 {enrollment.enrolledAt && (

@@ -73,6 +73,19 @@ export const lessonsService = api.injectEndpoints({
       ],
     }),
 
+    // POST /api/lessons/topics/:topicId/enroll
+    enrollInCourse: builder.mutation<{ message: string }, string>({
+      query: (topicId) => ({
+        url: `/api/lessons/topics/${topicId}/enroll`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, topicId) => [
+        "Dashboard",
+        "Lessons",
+        { type: "Dashboard", id: topicId },
+      ],
+    }),
+
     // ── Lesson Detail ───────────────────────────────────────────────────
     getLesson: builder.query<LessonResponse, string>({
       query: (lessonId) => `/api/lessons/${lessonId}`,
@@ -210,6 +223,7 @@ export const {
   useGetBookmarksQuery,
   useAddBookmarkMutation,
   useRemoveBookmarkMutation,
+  useEnrollInCourseMutation,
   useGetLessonQuery,
   useAnswerLessonQuestionMutation,
   useCompleteLessonMutation,
