@@ -9,11 +9,14 @@ import { persistor, store } from "@/store";
 import type { AppDispatch, RootState } from "@/store";
 import { clearAuth } from "@/store/slices/auth/authSlice";
 import { clearTokens, setAccessToken } from "@/store/slices/auth/tokenSlice";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 
 function AuthTokenSync() {
   const dispatch = useDispatch<AppDispatch>();
   const { accessToken } = useSelector((state: RootState) => state.tokens);
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  useAuthRedirect();
 
   useEffect(() => {
     if (!accessToken) {

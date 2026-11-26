@@ -23,11 +23,7 @@ interface LoginFormValues {
 }
 
 const redirectMap: Record<string, string> = {
-  TUTOR: "/tutor/dashboard",
-  PARENT: "/parent/dashboard",
   STUDENT: "/student/dashboard",
-  ADMIN: "/core/admin/overview",
-  SUPER_ADMIN: "/core/admin/overview",
 };
 
 function getRedirectUrlFromRole(role?: string): string | null {
@@ -89,7 +85,10 @@ export default function LoginPage() {
       router.replace(redirectUrl);
       return;
     }
-    router.replace("/");
+    // No role-specific route — send to homepage
+    router.replace(
+      requestedRedirect?.startsWith("/") ? requestedRedirect : "/",
+    );
   }, [
     isAuthenticated,
     accessToken,
@@ -129,10 +128,11 @@ export default function LoginPage() {
         safeRedirect || getRedirectUrlFromRole(response?.user?.role);
 
       if (!redirectUrl) {
-        dispatch(clearTokens());
-        dispatch(clearAuth());
-        clearAuthTokenCookies();
-        router.replace("/");
+        // No role-specific redirect — go to homepage (public user)
+        toast.success("Login successful!");
+        router.replace(
+          requestedRedirect?.startsWith("/") ? requestedRedirect : "/",
+        );
         return;
       }
 

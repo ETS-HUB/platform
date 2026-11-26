@@ -1,12 +1,26 @@
 import type { Metadata } from "next";
 import { ConfigProvider, App as AntdApp } from "antd";
-import { Noto_Sans_JP, Lora, Quicksand } from "next/font/google";
+import { Noto_Sans_JP, Lora, Quicksand, Outfit, Poppins } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 
 import { ReduxProvider } from "@/providers/ReduxProvider";
 import { antdThemeConfig } from "@/antd-theme-config";
 import "../animations/animations.css";
 import "./globals.css";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-outfit",
+  display: "swap",
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 const notoSans = Noto_Sans_JP({
   subsets: ["latin"],
@@ -43,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${notoSans.variable} ${lora.variable} ${quicksand.variable} h-full antialiased`}
+      className={`${poppins.variable} ${outfit.variable} ${notoSans.variable} ${lora.variable} ${quicksand.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ConfigProvider theme={antdThemeConfig}>

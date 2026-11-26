@@ -5,6 +5,7 @@
   --foreground: #171717;
   --font-noto-sans: "Noto Sans", sans-serif;
   --font-lora: "Lora", serif;
+  --font-outfit: "Outfit", "Poppins", serif;
   --font-quicksand: "Quicksand", sans-serif;
 
   --color-primary: #3a0ca3;
@@ -27,9 +28,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-noto: var(--font-noto-sans);
-  --font-lora: var(--font-lora);
-  --font-quicksand: var(--font-quicksand);
+
+  --font-family-outfit: var(--font-outfit);
+  --font-family-noto: var(--font-noto-sans);
+  --font-family-lora: var(--font-lora);
+  --font-family-quicksand: var(--font-quicksand);
 
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
