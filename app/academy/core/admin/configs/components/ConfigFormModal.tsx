@@ -82,7 +82,6 @@ export function ConfigFormModal({
           ? "difficulty"
           : "none",
     );
-    f;
   }, [config, open]);
 
   const topicAllocated = Object.values(topicDistribution).reduce(
